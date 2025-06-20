@@ -193,12 +193,14 @@ export default function AdminManagement() {
       });
       setAdminToDelete(null);
     },
-    onError: () => {
+    onError: (error: any) => {
+      const errorMessage = error?.message || "Failed to delete admin";
       toast({
         title: "Error",
-        description: "Failed to delete admin",
+        description: errorMessage,
         variant: "destructive",
       });
+      setAdminToDelete(null);
     },
   });
 
@@ -213,6 +215,16 @@ export default function AdminManagement() {
   };
 
   const handleDelete = (admin: Admin) => {
+    // Check if this would be the last active admin
+    const activeAdmins = admins?.filter(a => a.isActive) || [];
+    if (activeAdmins.length <= 1) {
+      toast({
+        title: "Cannot Delete Admin",
+        description: "You cannot delete the last active admin account. At least one admin must remain active to manage the system.",
+        variant: "destructive",
+      });
+      return;
+    }
     setAdminToDelete(admin);
   };
 
@@ -276,54 +288,68 @@ export default function AdminManagement() {
       </div>
 
       <div className="grid gap-4">
-        {admins?.map((admin) => (
-          <Card key={admin.id} className="relative">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    {admin.isActive ? (
-                      <ShieldCheck className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <ShieldX className="h-5 w-5 text-red-600" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        {admin.username}
-                      </h4>
-                      <Badge variant={admin.isActive ? "default" : "secondary"}>
-                        {admin.isActive ? "Active" : "Inactive"}
-                      </Badge>
+        {admins?.map((admin) => {
+          const activeAdmins = admins?.filter(a => a.isActive) || [];
+          const isLastActiveAdmin = activeAdmins.length <= 1 && admin.isActive;
+          
+          return (
+            <Card key={admin.id} className="relative">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      {admin.isActive ? (
+                        <ShieldCheck className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <ShieldX className="h-5 w-5 text-red-600" />
+                      )}
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Admin ID: {admin.id}
-                    </p>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                          {admin.username}
+                        </h4>
+                        <Badge variant={admin.isActive ? "default" : "secondary"}>
+                          {admin.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        {isLastActiveAdmin && (
+                          <Badge variant="outline" className="text-orange-600 border-orange-300">
+                            Last Admin
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Admin ID: {admin.id}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(admin)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(admin)}
+                      disabled={isLastActiveAdmin}
+                      className={`text-red-600 hover:text-red-700 ${
+                        isLastActiveAdmin ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                      title={isLastActiveAdmin ? 'Cannot delete the last active admin' : 'Delete admin'}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(admin)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(admin)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
 
         {(!admins || admins.length === 0) && (
           <Card>
