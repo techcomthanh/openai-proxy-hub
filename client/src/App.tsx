@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import ApiManagement from "@/pages/api-management";
 import ModelAliases from "@/pages/model-aliases";
 import UserManagement from "@/pages/user-management";
+import AdminManagement from "@/pages/admin-management";
 import Configuration from "@/pages/configuration";
 import RequestLogs from "@/pages/request-logs";
 import Login from "@/pages/login";
@@ -37,6 +38,7 @@ function AuthenticatedApp() {
         <Route path="/apis" component={ApiManagement} />
         <Route path="/models" component={ModelAliases} />
         <Route path="/users" component={UserManagement} />
+        <Route path="/admins" component={AdminManagement} />
         <Route path="/config" component={Configuration} />
         <Route path="/logs" component={RequestLogs} />
         <Route component={NotFound} />

@@ -19,6 +19,7 @@ const navigation = [
   { name: "API Providers", href: "/apis", icon: ServerIcon },
   { name: "Model Aliases", href: "/models", icon: BrainIcon },
   { name: "User Management", href: "/users", icon: UsersIcon },
+  { name: "Admin Management", href: "/admins", icon: NetworkIcon },
   { name: "Configuration", href: "/config", icon: SettingsIcon },
   { name: "Request Logs", href: "/logs", icon: FileTextIcon },
 ];
