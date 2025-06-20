@@ -108,6 +108,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/admins/:id', requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Check if this is the last admin
+      const allAdmins = await storage.getAdmins();
+      const activeAdmins = allAdmins.filter(admin => admin.isActive);
+      
+      if (activeAdmins.length <= 1) {
+        return res.status(400).json({ error: 'Cannot delete the last active admin account' });
+      }
+      
       const deleted = await storage.deleteAdmin(id);
       if (!deleted) {
         return res.status(404).json({ error: 'Admin not found' });
