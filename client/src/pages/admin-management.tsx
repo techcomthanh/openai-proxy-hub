@@ -43,8 +43,12 @@ import type { Admin } from "@shared/schema";
 
 const adminFormSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
   isActive: z.boolean().default(true),
+});
+
+const createAdminFormSchema = adminFormSchema.extend({
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type AdminFormData = z.infer<typeof adminFormSchema>;
@@ -59,7 +63,7 @@ function AdminForm({ admin, onClose }: AdminFormProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<AdminFormData>({
-    resolver: zodResolver(adminFormSchema),
+    resolver: zodResolver(admin ? adminFormSchema : createAdminFormSchema),
     defaultValues: {
       username: admin?.username || "",
       password: "",
@@ -93,7 +97,13 @@ function AdminForm({ admin, onClose }: AdminFormProps) {
   });
 
   const onSubmit = (data: AdminFormData) => {
-    mutation.mutate(data);
+    // For updates, only include password if it's provided
+    if (admin && !data.password) {
+      const { password, ...dataWithoutPassword } = data;
+      mutation.mutate(dataWithoutPassword);
+    } else {
+      mutation.mutate(data);
+    }
   };
 
   return (
