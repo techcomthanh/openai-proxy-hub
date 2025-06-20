@@ -6,7 +6,8 @@ import {
   BrainIcon, 
   UsersIcon, 
   SettingsIcon, 
-  FileTextIcon 
+  FileTextIcon,
+  XIcon
 } from "lucide-react";
 
 const navigation = [
@@ -18,20 +19,32 @@ const navigation = [
   { name: "Request Logs", href: "/logs", icon: FileTextIcon },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const [location] = useLocation();
 
   return (
-    <div className="hidden md:flex md:w-64 md:flex-col">
+    <div className="w-64 flex flex-col">
       <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-white border-r border-gray-200">
         {/* Logo/Brand */}
-        <div className="flex items-center flex-shrink-0 px-4">
+        <div className="flex items-center justify-between flex-shrink-0 px-4">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <NetworkIcon className="text-white w-4 h-4" />
             </div>
             <h1 className="ml-3 text-xl font-semibold text-gray-900">Proxy HUB</h1>
           </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="md:hidden p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            >
+              <XIcon className="w-5 h-5" />
+            </button>
+          )}
         </div>
         
         {/* Navigation */}
@@ -44,9 +57,10 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={onClose}
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                   isActive
-                    ? "bg-primary/10 border-r-2 border-primary text-primary"
+                    ? "bg-primary bg-opacity-10 border-r-2 border-primary text-primary"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
