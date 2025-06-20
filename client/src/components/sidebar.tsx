@@ -7,8 +7,12 @@ import {
   UsersIcon, 
   SettingsIcon, 
   FileTextIcon,
-  XIcon
+  XIcon,
+  LogOut,
+  User
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: GaugeIcon },
@@ -25,6 +29,12 @@ interface SidebarProps {
 
 export default function Sidebar({ onClose }: SidebarProps) {
   const [location] = useLocation();
+  const { admin, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    onClose?.();
+  };
 
   return (
     <div className="w-64 flex flex-col">
@@ -74,6 +84,28 @@ export default function Sidebar({ onClose }: SidebarProps) {
             );
           })}
         </nav>
+      </div>
+      
+      {/* User info and logout */}
+      <div className="border-t p-4 mt-auto">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <User className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{admin?.username}</p>
+            <p className="text-xs text-muted-foreground">Administrator</p>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start"
+          onClick={handleLogout}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign Out
+        </Button>
       </div>
     </div>
   );
