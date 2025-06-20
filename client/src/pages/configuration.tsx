@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Copy } from "lucide-react";
 import type { Configuration } from "@shared/schema";
 
 interface ConfigState {
-  proxyUrl: string;
   requestTimeout: number;
   maxRetries: number;
   enableLogging: boolean;
@@ -22,8 +22,8 @@ interface ConfigState {
 
 export default function Configuration() {
   const { toast } = useToast();
+  const [currentDomain, setCurrentDomain] = useState<string>("");
   const [config, setConfig] = useState<ConfigState>({
-    proxyUrl: "http://mydomain.com/v1",
     requestTimeout: 30,
     maxRetries: 3,
     enableLogging: true,
@@ -32,6 +32,12 @@ export default function Configuration() {
     rateLimitPerMinute: 60,
     logFailedAuth: true,
   });
+
+  useEffect(() => {
+    // Get current domain
+    const domain = window.location.origin;
+    setCurrentDomain(`${domain}/v1`);
+  }, []);
 
   const { data: configurations, isLoading } = useQuery<Configuration[]>({
     queryKey: ["/api/configuration"],
@@ -83,6 +89,14 @@ export default function Configuration() {
     }));
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(currentDomain);
+    toast({
+      title: "Copied",
+      description: "Proxy URL copied to clipboard",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -114,13 +128,27 @@ export default function Configuration() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="proxyUrl">Proxy URL</Label>
-                <Input
-                  id="proxyUrl"
-                  value={config.proxyUrl}
-                  onChange={(e) => handleInputChange("proxyUrl", e.target.value)}
-                  className="mt-1"
-                />
+                <Label htmlFor="proxyUrl">Proxy Endpoint</Label>
+                <div className="flex mt-1">
+                  <Input
+                    id="proxyUrl"
+                    value={currentDomain}
+                    readOnly
+                    className="bg-gray-50 text-gray-700"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="ml-2"
+                    onClick={copyToClipboard}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  This is your OpenAI-compatible API endpoint. Use this URL in your applications.
+                </p>
               </div>
               <div>
                 <Label htmlFor="requestTimeout">Request Timeout (seconds)</Label>
