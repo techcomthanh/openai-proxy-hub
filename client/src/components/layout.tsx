@@ -1,14 +1,33 @@
+import { useState } from "react";
 import Sidebar from "./sidebar";
-import { NetworkIcon } from "lucide-react";
+import { MenuIcon, XIcon } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div 
+            className="fixed inset-0 bg-gray-600 bg-opacity-75"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <div className="relative flex flex-col w-64 bg-white h-full">
+            <Sidebar onClose={() => setSidebarOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex">
+        <Sidebar />
+      </div>
       
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -16,10 +35,11 @@ export default function Layout({ children }: LayoutProps) {
         <header className="bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center">
-              <button className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+              <button 
+                className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <MenuIcon className="w-5 h-5" />
               </button>
               <h2 className="ml-2 text-2xl font-semibold text-gray-900" id="page-title">
                 Proxy HUB
