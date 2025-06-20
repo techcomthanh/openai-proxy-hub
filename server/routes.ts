@@ -34,6 +34,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(401).json({ error: 'Invalid credentials' });
       }
     } catch (error) {
+      console.error('Login error:', error);
       res.status(500).json({ error: 'Login failed' });
     }
   });
