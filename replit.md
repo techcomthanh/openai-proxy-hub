@@ -59,6 +59,8 @@ The application uses five main tables:
 - Default admin account: username "admin", password "admin123"
 - Protected admin routes require login before accessing dashboard features
 - Automatic session management with logout functionality
+- Admin passwords encrypted using bcrypt with 12 salt rounds for enhanced security
+- Full admin account management with create, read, update, delete operations
 
 ## Data Flow
 
@@ -118,6 +120,10 @@ Changelog:
 - June 20, 2025. Added protected admin routes and login interface with default credentials (admin/admin123)
 - June 20, 2025. Enhanced UI with responsive design and fixed menu text contrast issues
 - June 20, 2025. Created user info display and logout functionality in sidebar
+- June 20, 2025. Changed "API Management" to "API Providers" in navigation
+- June 20, 2025. Updated configuration page to show current domain as read-only proxy endpoint
+- June 20, 2025. Created comprehensive admin management page with CRUD operations
+- June 20, 2025. Implemented bcrypt password encryption for admin accounts (12 salt rounds)
 ```
 
 ## User Preferences
