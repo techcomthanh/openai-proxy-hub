@@ -140,6 +140,7 @@ Changelog:
 - June 20, 2025. Removed SESSION_SECRET requirement - simplified session management with static key
 - June 20, 2025. Updated all configuration files and documentation to remove session complexity
 - June 20, 2025. Removed NODE_ENV from configuration templates - let users manage environment mode through their own .env files
+- June 20, 2025. Fixed Docker build issue - updated Dockerfile to install all dependencies for esbuild external packages
 ```
 
 ## User Preferences
