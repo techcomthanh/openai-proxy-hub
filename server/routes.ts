@@ -5,8 +5,8 @@ import { proxyMiddleware } from "./proxy";
 import { insertApiSchema, insertModelAliasSchema, insertApiUserSchema, insertConfigurationSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // OpenAI-compatible proxy endpoints
-  app.use('/v1/*', proxyMiddleware);
+  // OpenAI-compatible proxy endpoints - register these first
+  app.all('/v1/*', proxyMiddleware);
 
   // Admin API routes
   app.get('/api/stats', async (req, res) => {
