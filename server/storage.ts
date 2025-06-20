@@ -1,6 +1,7 @@
 import { apis, modelAliases, apiUsers, requestLogs, configuration, users, admins, type Api, type InsertApi, type ModelAlias, type InsertModelAlias, type ApiUser, type InsertApiUser, type RequestLog, type InsertRequestLog, type Configuration, type InsertConfiguration, type User, type InsertUser, type Admin, type InsertAdmin } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, gte, count } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 export interface IStorage {
   // Legacy user methods
@@ -620,14 +621,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAdmin(insertAdmin: InsertAdmin): Promise<Admin> {
-    const [admin] = await db.insert(admins).values(insertAdmin).returning();
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(insertAdmin.password, saltRounds);
+    
+    const [admin] = await db.insert(admins).values({
+      ...insertAdmin,
+      password: hashedPassword
+    }).returning();
     return admin;
   }
 
   async updateAdmin(id: number, updateData: Partial<InsertAdmin>): Promise<Admin | undefined> {
+    const dataToUpdate = { ...updateData };
+    
+    // Hash password if it's being updated
+    if (updateData.password) {
+      const saltRounds = 12;
+      dataToUpdate.password = await bcrypt.hash(updateData.password, saltRounds);
+    }
+    
     const [admin] = await db
       .update(admins)
-      .set(updateData)
+      .set(dataToUpdate)
       .where(eq(admins.id, id))
       .returning();
     return admin || undefined;
@@ -644,8 +659,11 @@ export class DatabaseStorage implements IStorage {
       .from(admins)
       .where(eq(admins.username, username));
     
-    if (admin && admin.password === password && admin.isActive) {
-      return admin;
+    if (admin && admin.isActive) {
+      const isValidPassword = await bcrypt.compare(password, admin.password);
+      if (isValidPassword) {
+        return admin;
+      }
     }
     return null;
   }
