@@ -134,6 +134,8 @@ Changelog:
 - June 20, 2025. Created complete Docker deployment configuration with multi-stage builds
 - June 20, 2025. Added Docker Compose setup with PostgreSQL database integration
 - June 20, 2025. Enhanced README with comprehensive Docker deployment instructions
+- June 20, 2025. Added comprehensive comparison with vLLM and Ollama highlighting enterprise advantages
+- June 20, 2025. Enhanced README with use cases, performance metrics, and deployment comparisons
 ```
 
 ## User Preferences
