@@ -109,6 +109,8 @@ Changelog:
 - June 20, 2025. Initial setup
 - June 20, 2025. Successfully migrated from Neon serverless to user's PostgreSQL database
 - June 20, 2025. Renamed application to "OpenAI Proxy HUB"
+- June 20, 2025. Fixed proxy routing and verified working /v1/chat/completions endpoint
+- June 20, 2025. Updated model configuration to use Qwen/Qwen2.5-Coder-14B-Instruct-AWQ from Roxane API
 ```
 
 ## User Preferences
