@@ -42,12 +42,17 @@ A comprehensive OpenAI-compatible API proxy hub that centralizes multiple AI API
    ```
 
 3. **Set up environment variables**
-   Create a `.env` file in the root directory:
+   Copy the example environment file and configure your settings:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` with your actual values:
    ```env
    DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-   SESSION_SECRET=your-secure-session-secret-key
-   NODE_ENV=development
    ```
+   
+   **Security Note**: Never commit the `.env` file to version control. It contains sensitive credentials.
 
 4. **Set up the database**
    ```bash
@@ -73,8 +78,6 @@ The application will be available at `http://localhost:5000`
 2. **Set production environment variables**
    ```env
    DATABASE_URL=your-production-database-url
-   SESSION_SECRET=your-production-session-secret
-   NODE_ENV=production
    PORT=5000
    ```
 
@@ -118,8 +121,6 @@ This will start both the PostgreSQL database and the application. The database w
      --name openai-proxy-hub \
      -p 5000:5000 \
      -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
-     -e SESSION_SECRET="your-secure-secret" \
-     -e NODE_ENV="production" \
      openai-proxy-hub
    ```
 
@@ -128,7 +129,6 @@ This will start both the PostgreSQL database and the application. The database w
 Create a `.env.docker` file:
 ```env
 POSTGRES_PASSWORD=secure_database_password
-SESSION_SECRET=your-production-session-secret
 DATABASE_URL=postgresql://proxy_user:secure_database_password@postgres:5432/openai_proxy_hub
 ```
 
@@ -241,12 +241,13 @@ curl -X POST https://your-domain.com/v1/chat/completions \
 
 ## Security Considerations
 
-- **Change default admin password** immediately
-- **Use strong session secrets** in production
+- **Change default admin password** immediately after first login
+- **Never commit `.env` files** to version control - they contain sensitive credentials
 - **Enable HTTPS** for production deployments
-- **Regularly rotate API keys**
+- **Regularly rotate API keys** and database passwords
 - **Monitor request logs** for suspicious activity
-- **Keep dependencies updated**
+- **Keep dependencies updated** with regular security patches
+- **Use environment-specific configurations** for different deployment stages
 
 ## Monitoring
 
@@ -269,7 +270,7 @@ The dashboard provides:
 2. **Admin Login Failed**
    - Confirm default credentials: admin/admin123
    - Check if admin account exists in database
-   - Verify session configuration
+   - Verify session configuration is working
 
 3. **API Requests Failing**
    - Check API provider configurations
