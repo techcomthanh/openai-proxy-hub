@@ -1,5 +1,7 @@
 import { db } from "./db";
-import { apis, modelAliases, apiUsers, configuration } from "@shared/schema";
+import { apis, modelAliases, apiUsers, configuration, admins } from "@shared/schema";
+import bcrypt from "bcrypt";
+import { eq } from "drizzle-orm";
 
 async function seedDatabase() {
   console.log("Seeding database with initial data...");
@@ -9,6 +11,33 @@ async function seedDatabase() {
     const existingApis = await db.select().from(apis);
     if (existingApis.length > 0) {
       console.log("Database already contains data, skipping seed.");
+      
+      // Check if admin needs password update or creation
+      const existingAdmins = await db.select().from(admins);
+      if (existingAdmins.length === 0) {
+        console.log("Creating default admin account...");
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash('admin123', saltRounds);
+        await db.insert(admins).values({
+          username: 'admin',
+          password: hashedPassword,
+          isActive: true
+        });
+        console.log("Default admin account created successfully.");
+      } else {
+        // Check if any admin has plain text password and update it
+        for (const admin of existingAdmins) {
+          if (admin.password === 'admin123') {
+            console.log(`Updating password for admin: ${admin.username}`);
+            const saltRounds = 12;
+            const hashedPassword = await bcrypt.hash('admin123', saltRounds);
+            await db.update(admins)
+              .set({ password: hashedPassword })
+              .where(eq(admins.id, admin.id));
+            console.log(`Password updated for admin: ${admin.username}`);
+          }
+        }
+      }
       return;
     }
 
@@ -79,6 +108,18 @@ async function seedDatabase() {
     ]);
 
     console.log("Created sample configuration");
+
+    // Create default admin with encrypted password
+    console.log("Creating default admin account...");
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash('admin123', saltRounds);
+    await db.insert(admins).values({
+      username: 'admin',
+      password: hashedPassword,
+      isActive: true
+    });
+
+    console.log("Default admin account created successfully.");
     console.log("Database seeding completed successfully!");
 
   } catch (error) {
