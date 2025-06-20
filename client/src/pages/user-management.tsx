@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { PlusIcon, UserIcon, CopyIcon } from "lucide-react";
+import { PlusIcon, UserIcon, CopyIcon, EditIcon, TrashIcon } from "lucide-react";
 import UserForm from "@/components/forms/user-form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -102,94 +102,81 @@ export default function UserManagement() {
         </Dialog>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      {/* Users List */}
+      <div className="bg-white shadow overflow-hidden sm:rounded-md">
         {users && users.length > 0 ? (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  API Key
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Allowed Models
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 w-8 h-8">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <UserIcon className="w-4 h-4 text-blue-600" />
+          <ul className="divide-y divide-gray-200">
+            {users.map((user) => (
+              <li key={user.id}>
+                <div className="px-6 py-4">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-10 h-10">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <UserIcon className="w-5 h-5 text-blue-600" />
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <div className="flex items-center">
+                        <h3 className="text-sm font-medium text-gray-900">{user.name}</h3>
+                        <Badge 
+                          variant={user.isActive ? "default" : "secondary"}
+                          className="ml-2"
+                        >
+                          {user.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <div className="flex items-center">
+                          <span className="text-xs text-gray-500 mr-2">API Key:</span>
+                          <code className="text-xs text-gray-700 font-mono mr-2">{user.apiKey}</code>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(user.apiKey)}
+                            className="p-1 h-auto"
+                          >
+                            <CopyIcon className="w-3 h-3" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+
+                      <div className="mt-2">
+                        <div className="text-xs text-gray-500 mb-1">Allowed Models:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {user.allowedModels.map((model) => (
+                            <Badge key={model} variant="outline" className="text-xs">
+                              {model}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <code className="text-sm text-gray-500 font-mono">{user.apiKey}</code>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyToClipboard(user.apiKey)}
-                        className="ml-2 p-1 h-auto"
-                      >
-                        <CopyIcon className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {user.allowedModels.map((model) => (
-                        <Badge key={model} variant="outline" className="text-xs">
-                          {model}
-                        </Badge>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge variant={user.isActive ? "default" : "secondary"}>
-                      {user.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  </div>
+                  
+                  <div className="mt-3 flex items-center space-x-2">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleEdit(user)}
-                      className="text-primary hover:text-primary-600 mr-3"
                     >
+                      <EditIcon className="w-4 h-4 mr-1" />
                       Edit
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleDelete(user.id)}
                       disabled={deleteMutation.isPending}
-                      className="text-red-600 hover:text-red-900"
                     >
+                      <TrashIcon className="w-4 h-4 mr-1" />
                       Revoke
                     </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         ) : (
           <div className="text-center py-12">
             <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
