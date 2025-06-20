@@ -552,31 +552,17 @@ export class DatabaseStorage implements IStorage {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [activeApisResult] = await db
-      .select({ count: db.count() })
-      .from(apis)
-      .where(eq(apis.isActive, true));
-
-    const [modelAliasesResult] = await db
-      .select({ count: db.count() })
-      .from(modelAliases)
-      .where(eq(modelAliases.isActive, true));
-
-    const [activeUsersResult] = await db
-      .select({ count: db.count() })
-      .from(apiUsers)
-      .where(eq(apiUsers.isActive, true));
-
-    const [requestsTodayResult] = await db
-      .select({ count: db.count() })
-      .from(requestLogs)
-      .where(gte(requestLogs.createdAt, today));
+    // Get counts using separate queries to avoid complexity
+    const activeApisCount = await db.select().from(apis).where(eq(apis.isActive, true));
+    const modelAliasesCount = await db.select().from(modelAliases).where(eq(modelAliases.isActive, true));
+    const activeUsersCount = await db.select().from(apiUsers).where(eq(apiUsers.isActive, true));
+    const requestsTodayCount = await db.select().from(requestLogs).where(gte(requestLogs.createdAt, today));
 
     return {
-      activeApis: activeApisResult.count,
-      modelAliases: modelAliasesResult.count,
-      activeUsers: activeUsersResult.count,
-      requestsToday: requestsTodayResult.count,
+      activeApis: activeApisCount.length,
+      modelAliases: modelAliasesCount.length,
+      activeUsers: activeUsersCount.length,
+      requestsToday: requestsTodayCount.length,
     };
   }
 }
