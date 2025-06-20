@@ -97,7 +97,7 @@
 }
 
 .nav-item-active {
-  @apply bg-primary/10 border-r-2 border-primary text-primary-foreground;
+  @apply bg-primary bg-opacity-10 border-r-2 border-primary text-primary;
 }
 
 .nav-item-inactive {
