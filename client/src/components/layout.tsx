@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Sidebar from "./sidebar";
 import { MenuIcon, XIcon } from "lucide-react";
 
@@ -8,6 +9,11 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const { data: stats } = useQuery<{ activeApis: number }>({
+    queryKey: ["/api/stats"],
+    refetchInterval: 30000, // Check every 30 seconds
+  });
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -47,10 +53,17 @@ export default function Layout({ children }: LayoutProps) {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-sm text-gray-600">Proxy Status: Active</span>
+                <div className={`w-2 h-2 rounded-full ${
+                  stats && stats.activeApis > 0 
+                    ? 'bg-green-400' 
+                    : 'bg-red-400'
+                }`}></div>
+                <span className="text-sm text-gray-600">
+                  Proxy Status: {stats && stats.activeApis > 0 ? 'Active' : 'Inactive'}
+                  {stats && ` (${stats.activeApis} APIs)`}
+                </span>
               </div>
-              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+              
             </div>
           </div>
         </header>
