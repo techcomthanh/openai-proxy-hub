@@ -1,12 +1,22 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { proxyMiddleware } from "./proxy";
 import { insertApiSchema, insertModelAliasSchema, insertApiUserSchema, insertConfigurationSchema, insertAdminSchema } from "@shared/schema";
 
+// Extend Express Request type to include session
+declare module 'express-session' {
+  interface SessionData {
+    admin?: {
+      id: number;
+      username: string;
+    };
+  }
+}
+
 // Authentication middleware
-function requireAuth(req: any, res: any, next: any) {
-  if ((req as any).session?.admin) {
+function requireAuth(req: Request, res: Response, next: any) {
+  if (req.session?.admin) {
     next();
   } else {
     res.status(401).json({ error: 'Authentication required' });
@@ -18,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.all('/v1/*', proxyMiddleware);
 
   // Authentication routes (no auth required)
-  app.post('/api/auth/login', async (req, res) => {
+  app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
       
@@ -28,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const admin = await storage.validateAdminCredentials(username, password);
       if (admin) {
-        (req as any).session.admin = { id: admin.id, username: admin.username };
+        req.session.admin = { id: admin.id, username: admin.username };
         res.json({ success: true, admin: { id: admin.id, username: admin.username } });
       } else {
         res.status(401).json({ error: 'Invalid credentials' });
@@ -39,8 +49,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/logout', (req, res) => {
-    (req as any).session.destroy((err: any) => {
+  app.post('/api/auth/logout', (req: Request, res: Response) => {
+    req.session.destroy((err: any) => {
       if (err) {
         res.status(500).json({ error: 'Logout failed' });
       } else {
@@ -49,9 +59,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get('/api/auth/me', (req, res) => {
-    if ((req as any).session?.admin) {
-      res.json({ admin: (req as any).session.admin });
+  app.get('/api/auth/me', (req: Request, res: Response) => {
+    if (req.session?.admin) {
+      res.json({ admin: req.session.admin });
     } else {
       res.status(401).json({ error: 'Not authenticated' });
     }
