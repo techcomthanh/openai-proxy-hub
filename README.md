@@ -42,12 +42,25 @@ A comprehensive OpenAI-compatible API proxy hub that centralizes multiple AI API
    ```
 
 3. **Set up environment variables**
-   Create a `.env` file in the root directory:
+   Copy the example environment file and configure your settings:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` with your actual values:
    ```env
    DATABASE_URL=postgresql://username:password@localhost:5432/database_name
    SESSION_SECRET=your-secure-session-secret-key
    NODE_ENV=development
    ```
+   
+   **About SESSION_SECRET**:
+   - **Development**: Optional - the application will work without it using default session handling
+   - **Production**: Required - generates secure session cookies for admin authentication
+   - **Format**: Use a random string of 32+ characters for security
+   - **Generation**: `openssl rand -base64 32` or any secure random generator
+   
+   **Security Note**: Never commit the `.env` file to version control. It contains sensitive credentials.
 
 4. **Set up the database**
    ```bash
@@ -243,12 +256,15 @@ curl -X POST https://your-domain.com/v1/chat/completions \
 
 ## Security Considerations
 
-- **Change default admin password** immediately
-- **Use strong session secrets** in production
+- **Change default admin password** immediately after first login
+- **SESSION_SECRET is mandatory for production** - use 32+ random characters for secure sessions
+- **Generate SESSION_SECRET**: `openssl rand -base64 32` or similar secure method
+- **Never commit `.env` files** to version control - they contain sensitive credentials
 - **Enable HTTPS** for production deployments
-- **Regularly rotate API keys**
+- **Regularly rotate API keys** and database passwords
 - **Monitor request logs** for suspicious activity
-- **Keep dependencies updated**
+- **Keep dependencies updated** with regular security patches
+- **Use environment-specific configurations** for different deployment stages
 
 ## Monitoring
 
