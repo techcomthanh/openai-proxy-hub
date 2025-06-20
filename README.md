@@ -90,25 +90,62 @@ The application will be available at `http://localhost:5000`
 
 ### Option 2: Docker Deployment
 
-Create a `Dockerfile`:
-```dockerfile
-FROM node:18-alpine
+#### Quick Start with Docker Compose (Recommended)
 
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
+1. **Set up environment variables**
+   ```bash
+   cp .env.example .env.docker
+   # Edit .env.docker with your production values
+   ```
 
-COPY . .
-RUN npm run build
+2. **Start the application stack**
+   ```bash
+   docker-compose up -d
+   ```
 
-EXPOSE 5000
-CMD ["npm", "start"]
+This will start both the PostgreSQL database and the application. The database will be automatically initialized.
+
+#### Manual Docker Build
+
+1. **Build the image**
+   ```bash
+   docker build -t openai-proxy-hub .
+   ```
+
+2. **Run with external database**
+   ```bash
+   docker run -d \
+     --name openai-proxy-hub \
+     -p 5000:5000 \
+     -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
+     -e SESSION_SECRET="your-secure-secret" \
+     -e NODE_ENV="production" \
+     openai-proxy-hub
+   ```
+
+#### Docker Environment Variables
+
+Create a `.env.docker` file:
+```env
+POSTGRES_PASSWORD=secure_database_password
+SESSION_SECRET=your-production-session-secret
+DATABASE_URL=postgresql://proxy_user:secure_database_password@postgres:5432/openai_proxy_hub
 ```
 
-Build and run:
+#### Docker Management Commands
+
 ```bash
-docker build -t openai-proxy-hub .
-docker run -p 5000:5000 --env-file .env openai-proxy-hub
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Rebuild and restart
+docker-compose up --build -d
+
+# Access database
+docker-compose exec postgres psql -U proxy_user -d openai_proxy_hub
 ```
 
 ### Option 3: Replit Deployment
