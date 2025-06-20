@@ -1,4 +1,4 @@
-import { apis, modelAliases, apiUsers, requestLogs, configuration, users, type Api, type InsertApi, type ModelAlias, type InsertModelAlias, type ApiUser, type InsertApiUser, type RequestLog, type InsertRequestLog, type Configuration, type InsertConfiguration, type User, type InsertUser } from "@shared/schema";
+import { apis, modelAliases, apiUsers, requestLogs, configuration, users, admins, type Api, type InsertApi, type ModelAlias, type InsertModelAlias, type ApiUser, type InsertApiUser, type RequestLog, type InsertRequestLog, type Configuration, type InsertConfiguration, type User, type InsertUser, type Admin, type InsertAdmin } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, gte, count } from "drizzle-orm";
 
@@ -46,6 +46,15 @@ export interface IStorage {
     activeUsers: number;
     requestsToday: number;
   }>;
+
+  // Admin methods
+  getAdmins(): Promise<Admin[]>;
+  getAdmin(id: number): Promise<Admin | undefined>;
+  getAdminByUsername(username: string): Promise<Admin | undefined>;
+  createAdmin(admin: InsertAdmin): Promise<Admin>;
+  updateAdmin(id: number, admin: Partial<InsertAdmin>): Promise<Admin | undefined>;
+  deleteAdmin(id: number): Promise<boolean>;
+  validateAdminCredentials(username: string, password: string): Promise<Admin | null>;
 }
 
 export class MemStorage implements IStorage {
