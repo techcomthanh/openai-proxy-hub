@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { apiRequest } from "./queryClient";
 
 interface Admin {
   id: number;
