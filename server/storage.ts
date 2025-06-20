@@ -1,4 +1,6 @@
-import { apis, modelAliases, apiUsers, requestLogs, configuration, type Api, type InsertApi, type ModelAlias, type InsertModelAlias, type ApiUser, type InsertApiUser, type RequestLog, type InsertRequestLog, type Configuration, type InsertConfiguration, type User, type InsertUser } from "@shared/schema";
+import { apis, modelAliases, apiUsers, requestLogs, configuration, users, type Api, type InsertApi, type ModelAlias, type InsertModelAlias, type ApiUser, type InsertApiUser, type RequestLog, type InsertRequestLog, type Configuration, type InsertConfiguration, type User, type InsertUser } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, gte, count } from "drizzle-orm";
 
 export interface IStorage {
   // Legacy user methods
@@ -351,4 +353,232 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async getApis(): Promise<Api[]> {
+    return await db.select().from(apis);
+  }
+
+  async getApi(id: number): Promise<Api | undefined> {
+    const [api] = await db.select().from(apis).where(eq(apis.id, id));
+    return api || undefined;
+  }
+
+  async createApi(insertApi: InsertApi): Promise<Api> {
+    const [api] = await db
+      .insert(apis)
+      .values({
+        name: insertApi.name,
+        baseUrl: insertApi.baseUrl,
+        apiKey: insertApi.apiKey,
+        modelName: insertApi.modelName,
+        isActive: insertApi.isActive ?? true,
+      })
+      .returning();
+    return api;
+  }
+
+  async updateApi(id: number, updateData: Partial<InsertApi>): Promise<Api | undefined> {
+    const [api] = await db
+      .update(apis)
+      .set(updateData)
+      .where(eq(apis.id, id))
+      .returning();
+    return api || undefined;
+  }
+
+  async deleteApi(id: number): Promise<boolean> {
+    const result = await db.delete(apis).where(eq(apis.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getModelAliases(): Promise<ModelAlias[]> {
+    return await db.select().from(modelAliases);
+  }
+
+  async getModelAlias(alias: string): Promise<ModelAlias | undefined> {
+    const [modelAlias] = await db
+      .select()
+      .from(modelAliases)
+      .where(eq(modelAliases.alias, alias));
+    return modelAlias || undefined;
+  }
+
+  async createModelAlias(insertModelAlias: InsertModelAlias): Promise<ModelAlias> {
+    const [modelAlias] = await db
+      .insert(modelAliases)
+      .values({
+        alias: insertModelAlias.alias,
+        apiId: insertModelAlias.apiId,
+        isActive: insertModelAlias.isActive ?? true,
+      })
+      .returning();
+    return modelAlias;
+  }
+
+  async updateModelAlias(id: number, updateData: Partial<InsertModelAlias>): Promise<ModelAlias | undefined> {
+    const [modelAlias] = await db
+      .update(modelAliases)
+      .set(updateData)
+      .where(eq(modelAliases.id, id))
+      .returning();
+    return modelAlias || undefined;
+  }
+
+  async deleteModelAlias(id: number): Promise<boolean> {
+    const result = await db.delete(modelAliases).where(eq(modelAliases.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getApiUsers(): Promise<ApiUser[]> {
+    return await db.select().from(apiUsers);
+  }
+
+  async getApiUser(id: number): Promise<ApiUser | undefined> {
+    const [user] = await db.select().from(apiUsers).where(eq(apiUsers.id, id));
+    return user || undefined;
+  }
+
+  async getApiUserByKey(apiKey: string): Promise<ApiUser | undefined> {
+    const [user] = await db
+      .select()
+      .from(apiUsers)
+      .where(eq(apiUsers.apiKey, apiKey));
+    return user || undefined;
+  }
+
+  async createApiUser(insertApiUser: InsertApiUser): Promise<ApiUser> {
+    const [user] = await db
+      .insert(apiUsers)
+      .values({
+        name: insertApiUser.name,
+        apiKey: insertApiUser.apiKey,
+        allowedModels: insertApiUser.allowedModels ?? [],
+        isActive: insertApiUser.isActive ?? true,
+      })
+      .returning();
+    return user;
+  }
+
+  async updateApiUser(id: number, updateData: Partial<InsertApiUser>): Promise<ApiUser | undefined> {
+    const [user] = await db
+      .update(apiUsers)
+      .set(updateData)
+      .where(eq(apiUsers.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async deleteApiUser(id: number): Promise<boolean> {
+    const result = await db.delete(apiUsers).where(eq(apiUsers.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getRequestLogs(limit: number = 100): Promise<RequestLog[]> {
+    return await db
+      .select()
+      .from(requestLogs)
+      .orderBy(desc(requestLogs.createdAt))
+      .limit(limit);
+  }
+
+  async createRequestLog(insertLog: InsertRequestLog): Promise<RequestLog> {
+    const [log] = await db
+      .insert(requestLogs)
+      .values({
+        userApiKey: insertLog.userApiKey,
+        modelAlias: insertLog.modelAlias,
+        upstreamApiId: insertLog.upstreamApiId ?? null,
+        statusCode: insertLog.statusCode,
+        responseTimeMs: insertLog.responseTimeMs,
+        requestTokens: insertLog.requestTokens ?? null,
+        responseTokens: insertLog.responseTokens ?? null,
+        errorMessage: insertLog.errorMessage ?? null,
+      })
+      .returning();
+    return log;
+  }
+
+  async getConfiguration(key: string): Promise<Configuration | undefined> {
+    const [config] = await db
+      .select()
+      .from(configuration)
+      .where(eq(configuration.key, key));
+    return config || undefined;
+  }
+
+  async setConfiguration(insertConfig: InsertConfiguration): Promise<Configuration> {
+    const [config] = await db
+      .insert(configuration)
+      .values(insertConfig)
+      .onConflictDoUpdate({
+        target: configuration.key,
+        set: {
+          value: insertConfig.value,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return config;
+  }
+
+  async getAllConfiguration(): Promise<Configuration[]> {
+    return await db.select().from(configuration);
+  }
+
+  async getStats(): Promise<{
+    activeApis: number;
+    modelAliases: number;
+    activeUsers: number;
+    requestsToday: number;
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [activeApisResult] = await db
+      .select({ count: db.count() })
+      .from(apis)
+      .where(eq(apis.isActive, true));
+
+    const [modelAliasesResult] = await db
+      .select({ count: db.count() })
+      .from(modelAliases)
+      .where(eq(modelAliases.isActive, true));
+
+    const [activeUsersResult] = await db
+      .select({ count: db.count() })
+      .from(apiUsers)
+      .where(eq(apiUsers.isActive, true));
+
+    const [requestsTodayResult] = await db
+      .select({ count: db.count() })
+      .from(requestLogs)
+      .where(gte(requestLogs.createdAt, today));
+
+    return {
+      activeApis: activeApisResult.count,
+      modelAliases: modelAliasesResult.count,
+      activeUsers: activeUsersResult.count,
+      requestsToday: requestsTodayResult.count,
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();
