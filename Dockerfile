@@ -1,6 +1,9 @@
 # Multi-stage build for OpenAI Proxy HUB
 FROM node:18-alpine AS base
 
+# Install system dependencies
+RUN apk add --no-cache curl
+
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
@@ -27,9 +30,12 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN adduser --system --uid 1001 appuser
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
@@ -40,15 +46,18 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/drizzle.config.ts ./
 COPY --from=builder /app/shared ./shared
 
+# Create logs directory
+RUN mkdir -p /app/logs
+
 # Set correct permissions
-RUN chown -R nextjs:nodejs /app
-USER nextjs
+RUN chown -R appuser:nodejs /app
+USER appuser
 
 # Expose port
 EXPOSE 5000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:5000/api/auth/me || exit 1
 
 # Set environment variables
