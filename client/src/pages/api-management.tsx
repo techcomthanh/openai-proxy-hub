@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { PlusIcon, ServerIcon, EditIcon, TrashIcon } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { PlusIcon, ServerIcon, EditIcon, TrashIcon, TestTubeIcon } from "lucide-react";
 import ApiForm from "@/components/forms/api-form";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +15,11 @@ import type { Api } from "@shared/schema";
 export default function ApiManagement() {
   const [selectedApi, setSelectedApi] = useState<Api | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [testApi, setTestApi] = useState<Api | null>(null);
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [testMessage, setTestMessage] = useState("Hello, can you tell me a joke?");
+  const [testResponse, setTestResponse] = useState<string>("");
+  const [testLoading, setTestLoading] = useState(false);
   const { toast } = useToast();
 
   const { data: apis, isLoading } = useQuery<Api[]>({
@@ -53,6 +60,70 @@ export default function ApiManagement() {
   const handleDialogClose = () => {
     setDialogOpen(false);
     setSelectedApi(null);
+  };
+
+  const handleTestApi = (api: Api) => {
+    setTestApi(api);
+    setTestResponse("");
+    setTestDialogOpen(true);
+  };
+
+  const handleTestDialogClose = () => {
+    setTestDialogOpen(false);
+    setTestApi(null);
+    setTestResponse("");
+  };
+
+  const runApiTest = async () => {
+    if (!testApi) return;
+    
+    setTestLoading(true);
+    setTestResponse("");
+    
+    try {
+      const response = await fetch(testApi.baseUrl + "/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${testApi.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: testApi.modelName,
+          messages: [
+            { role: "user", content: testMessage }
+          ],
+          max_tokens: 150,
+          temperature: 0.7
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.choices && data.choices[0]) {
+        setTestResponse(data.choices[0].message.content);
+        toast({
+          title: "Test Successful",
+          description: "API responded successfully",
+        });
+      } else {
+        setTestResponse(`Error: ${data.error?.message || "Unknown error occurred"}`);
+        toast({
+          title: "Test Failed",
+          description: data.error?.message || "API test failed",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Network error occurred";
+      setTestResponse(`Network Error: ${errorMessage}`);
+      toast({
+        title: "Test Failed",
+        description: "Failed to connect to the API",
+        variant: "destructive",
+      });
+    } finally {
+      setTestLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -125,6 +196,15 @@ export default function ApiManagement() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleTestApi(api)}
+                      disabled={!api.isActive}
+                      title="Test API"
+                    >
+                      <TestTubeIcon className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleEdit(api)}
                     >
                       <EditIcon className="w-4 h-4" />
@@ -150,6 +230,61 @@ export default function ApiManagement() {
           </div>
         )}
       </div>
+
+      {/* Test API Dialog */}
+      <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Test API: {testApi?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="test-message">Test Message</Label>
+              <Textarea
+                id="test-message"
+                value={testMessage}
+                onChange={(e) => setTestMessage(e.target.value)}
+                placeholder="Enter your test message..."
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={runApiTest} 
+                disabled={testLoading || !testMessage.trim()}
+                className="flex-1"
+              >
+                {testLoading ? "Testing..." : "Send Test"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleTestDialogClose}
+              >
+                Close
+              </Button>
+            </div>
+
+            {testResponse && (
+              <div>
+                <Label>API Response</Label>
+                <div className="mt-1 p-3 bg-gray-50 border rounded-md">
+                  <pre className="text-sm whitespace-pre-wrap text-gray-800">
+                    {testResponse}
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
+              <strong>API Details:</strong><br />
+              URL: {testApi?.baseUrl}<br />
+              Model: {testApi?.modelName}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
