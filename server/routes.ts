@@ -2,14 +2,113 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { proxyMiddleware } from "./proxy";
-import { insertApiSchema, insertModelAliasSchema, insertApiUserSchema, insertConfigurationSchema } from "@shared/schema";
+import { insertApiSchema, insertModelAliasSchema, insertApiUserSchema, insertConfigurationSchema, insertAdminSchema } from "@shared/schema";
+
+// Authentication middleware
+function requireAuth(req: any, res: any, next: any) {
+  if ((req as any).session?.admin) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Authentication required' });
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // OpenAI-compatible proxy endpoints - register these first
   app.all('/v1/*', proxyMiddleware);
 
-  // Admin API routes
-  app.get('/api/stats', async (req, res) => {
+  // Authentication routes (no auth required)
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password required' });
+      }
+
+      const admin = await storage.validateAdminCredentials(username, password);
+      if (admin) {
+        (req as any).session.admin = { id: admin.id, username: admin.username };
+        res.json({ success: true, admin: { id: admin.id, username: admin.username } });
+      } else {
+        res.status(401).json({ error: 'Invalid credentials' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Login failed' });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    (req as any).session.destroy((err: any) => {
+      if (err) {
+        res.status(500).json({ error: 'Logout failed' });
+      } else {
+        res.json({ success: true });
+      }
+    });
+  });
+
+  app.get('/api/auth/me', (req, res) => {
+    if ((req as any).session?.admin) {
+      res.json({ admin: (req as any).session.admin });
+    } else {
+      res.status(401).json({ error: 'Not authenticated' });
+    }
+  });
+
+  // Admin management routes (protected)
+  app.get('/api/admins', requireAuth, async (req, res) => {
+    try {
+      const admins = await storage.getAdmins();
+      // Remove passwords from response
+      const safeAdmins = admins.map(admin => ({ ...admin, password: undefined }));
+      res.json(safeAdmins);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch admins' });
+    }
+  });
+
+  app.post('/api/admins', requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertAdminSchema.parse(req.body);
+      const admin = await storage.createAdmin(validatedData);
+      const safeAdmin = { ...admin, password: undefined };
+      res.status(201).json(safeAdmin);
+    } catch (error) {
+      res.status(400).json({ error: 'Invalid admin data' });
+    }
+  });
+
+  app.put('/api/admins/:id', requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertAdminSchema.partial().parse(req.body);
+      const admin = await storage.updateAdmin(id, validatedData);
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin not found' });
+      }
+      const safeAdmin = { ...admin, password: undefined };
+      res.json(safeAdmin);
+    } catch (error) {
+      res.status(400).json({ error: 'Invalid admin data' });
+    }
+  });
+
+  app.delete('/api/admins/:id', requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteAdmin(id);
+      if (!deleted) {
+        return res.status(404).json({ error: 'Admin not found' });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete admin' });
+    }
+  });
+
+  // Protected admin API routes
+  app.get('/api/stats', requireAuth, async (req, res) => {
     try {
       const stats = await storage.getStats();
       res.json(stats);

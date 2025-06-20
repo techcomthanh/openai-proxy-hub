@@ -360,6 +360,35 @@ export class MemStorage implements IStorage {
       requestsToday,
     };
   }
+
+  // Admin methods - placeholder for MemStorage
+  async getAdmins(): Promise<Admin[]> {
+    return [];
+  }
+
+  async getAdmin(id: number): Promise<Admin | undefined> {
+    return undefined;
+  }
+
+  async getAdminByUsername(username: string): Promise<Admin | undefined> {
+    return undefined;
+  }
+
+  async createAdmin(admin: InsertAdmin): Promise<Admin> {
+    throw new Error("Admin management not supported in MemStorage");
+  }
+
+  async updateAdmin(id: number, admin: Partial<InsertAdmin>): Promise<Admin | undefined> {
+    return undefined;
+  }
+
+  async deleteAdmin(id: number): Promise<boolean> {
+    return false;
+  }
+
+  async validateAdminCredentials(username: string, password: string): Promise<Admin | null> {
+    return null;
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -573,6 +602,52 @@ export class DatabaseStorage implements IStorage {
       activeUsers: activeUsersCount.length,
       requestsToday: requestsTodayCount.length,
     };
+  }
+
+  // Admin methods
+  async getAdmins(): Promise<Admin[]> {
+    return await db.select().from(admins).orderBy(admins.username);
+  }
+
+  async getAdmin(id: number): Promise<Admin | undefined> {
+    const [admin] = await db.select().from(admins).where(eq(admins.id, id));
+    return admin || undefined;
+  }
+
+  async getAdminByUsername(username: string): Promise<Admin | undefined> {
+    const [admin] = await db.select().from(admins).where(eq(admins.username, username));
+    return admin || undefined;
+  }
+
+  async createAdmin(insertAdmin: InsertAdmin): Promise<Admin> {
+    const [admin] = await db.insert(admins).values(insertAdmin).returning();
+    return admin;
+  }
+
+  async updateAdmin(id: number, updateData: Partial<InsertAdmin>): Promise<Admin | undefined> {
+    const [admin] = await db
+      .update(admins)
+      .set(updateData)
+      .where(eq(admins.id, id))
+      .returning();
+    return admin || undefined;
+  }
+
+  async deleteAdmin(id: number): Promise<boolean> {
+    const result = await db.delete(admins).where(eq(admins.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async validateAdminCredentials(username: string, password: string): Promise<Admin | null> {
+    const [admin] = await db
+      .select()
+      .from(admins)
+      .where(eq(admins.username, username));
+    
+    if (admin && admin.password === password && admin.isActive) {
+      return admin;
+    }
+    return null;
   }
 }
 
