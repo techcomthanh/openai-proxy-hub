@@ -207,7 +207,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Make direct call to the upstream API for testing
-      const response = await fetch(api.baseUrl + "/chat/completions", {
+      const upstreamUrl = api.baseUrl.endsWith('/') ? api.baseUrl + "chat/completions" : api.baseUrl + "/chat/completions";
+      console.log(`Testing API ${api.id} (${api.name}) at ${upstreamUrl} with model ${api.modelName}`);
+      
+      const response = await fetch(upstreamUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -224,6 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const data = await response.json();
+      console.log(`API response status: ${response.status}, data:`, data);
       
       if (response.ok && data.choices && data.choices[0]) {
         res.json({ 
@@ -234,7 +238,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(response.status).json({ 
           success: false, 
-          error: data.error?.message || "API test failed" 
+          error: data.error?.message || `API returned status ${response.status}`,
+          details: data
         });
       }
     } catch (error) {

@@ -84,18 +84,19 @@ export default function ApiManagement() {
       const response = await apiRequest("POST", `/api/test-api/${testApi.id}`, {
         message: testMessage
       });
+      const data: { success: boolean; response?: string; error?: string } = await response.json();
 
-      if (response.success) {
-        setTestResponse(response.response);
+      if (data.success && data.response) {
+        setTestResponse(data.response);
         toast({
           title: "Test Successful",
           description: "API responded successfully",
         });
       } else {
-        setTestResponse(`Error: ${response.error || "Unknown error occurred"}`);
+        setTestResponse(`Error: ${data.error || "Unknown error occurred"}`);
         toast({
           title: "Test Failed",
-          description: response.error || "API test failed",
+          description: data.error || "API test failed",
           variant: "destructive",
         });
       }
