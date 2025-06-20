@@ -178,8 +178,12 @@ export class MemStorage implements IStorage {
   async createApi(insertApi: InsertApi): Promise<Api> {
     const id = this.currentId++;
     const api: Api = {
-      ...insertApi,
       id,
+      name: insertApi.name,
+      baseUrl: insertApi.baseUrl,
+      apiKey: insertApi.apiKey,
+      modelName: insertApi.modelName,
+      isActive: insertApi.isActive ?? true,
       createdAt: new Date(),
     };
     this.apis.set(id, api);
@@ -213,8 +217,10 @@ export class MemStorage implements IStorage {
   async createModelAlias(insertModelAlias: InsertModelAlias): Promise<ModelAlias> {
     const id = this.currentId++;
     const modelAlias: ModelAlias = {
-      ...insertModelAlias,
       id,
+      alias: insertModelAlias.alias,
+      apiId: insertModelAlias.apiId,
+      isActive: insertModelAlias.isActive ?? true,
       createdAt: new Date(),
     };
     this.modelAliases.set(id, modelAlias);
@@ -252,8 +258,11 @@ export class MemStorage implements IStorage {
   async createApiUser(insertApiUser: InsertApiUser): Promise<ApiUser> {
     const id = this.currentId++;
     const apiUser: ApiUser = {
-      ...insertApiUser,
       id,
+      name: insertApiUser.name,
+      apiKey: insertApiUser.apiKey,
+      allowedModels: insertApiUser.allowedModels ?? [],
+      isActive: insertApiUser.isActive ?? true,
       createdAt: new Date(),
     };
     this.apiUsers.set(id, apiUser);
@@ -284,8 +293,15 @@ export class MemStorage implements IStorage {
   async createRequestLog(insertLog: InsertRequestLog): Promise<RequestLog> {
     const id = this.currentId++;
     const log: RequestLog = {
-      ...insertLog,
       id,
+      userApiKey: insertLog.userApiKey,
+      modelAlias: insertLog.modelAlias,
+      upstreamApiId: insertLog.upstreamApiId ?? null,
+      statusCode: insertLog.statusCode,
+      responseTimeMs: insertLog.responseTimeMs,
+      requestTokens: insertLog.requestTokens ?? null,
+      responseTokens: insertLog.responseTokens ?? null,
+      errorMessage: insertLog.errorMessage ?? null,
       createdAt: new Date(),
     };
     this.requestLogs.set(id, log);
