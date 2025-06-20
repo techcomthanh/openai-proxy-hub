@@ -77,6 +77,8 @@ The application will be available at `http://localhost:5000`
    NODE_ENV=production
    PORT=5000
    ```
+   
+   **Important**: `SESSION_SECRET` is required in production for secure admin sessions.
 
 3. **Run database migrations**
    ```bash
@@ -269,7 +271,8 @@ The dashboard provides:
 2. **Admin Login Failed**
    - Confirm default credentials: admin/admin123
    - Check if admin account exists in database
-   - Verify session configuration
+   - Verify `SESSION_SECRET` is set for production environments
+   - Session issues: Generate new SESSION_SECRET with `openssl rand -base64 32`
 
 3. **API Requests Failing**
    - Check API provider configurations
