@@ -4,14 +4,6 @@ FROM node:18-alpine AS base
 # Install system dependencies
 RUN apk add --no-cache curl
 
-# Install dependencies only when needed
-FROM base AS deps
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
 # Build the application
 FROM base AS builder
 WORKDIR /app
@@ -37,10 +29,12 @@ RUN apk add --no-cache curl
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 appuser
 
+# Copy package files and install production dependencies
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
 # Copy built application
 COPY --from=builder /app/dist ./dist
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
 
 # Copy other necessary files
 COPY --from=builder /app/drizzle.config.ts ./
@@ -61,7 +55,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:5000/api/auth/me || exit 1
 
 # Set environment variables
-ENV NODE_ENV=production
 ENV PORT=5000
 
 # Start the application

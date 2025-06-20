@@ -50,7 +50,6 @@ A comprehensive OpenAI-compatible API proxy hub that centralizes multiple AI API
    Edit `.env` with your actual values:
    ```env
    DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-   NODE_ENV=development
    ```
    
    **Security Note**: Never commit the `.env` file to version control. It contains sensitive credentials.
@@ -79,7 +78,6 @@ The application will be available at `http://localhost:5000`
 2. **Set production environment variables**
    ```env
    DATABASE_URL=your-production-database-url
-   NODE_ENV=production
    PORT=5000
    ```
 
@@ -123,7 +121,6 @@ This will start both the PostgreSQL database and the application. The database w
      --name openai-proxy-hub \
      -p 5000:5000 \
      -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
-     -e NODE_ENV="production" \
      openai-proxy-hub
    ```
 
