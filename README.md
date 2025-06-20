@@ -50,15 +50,8 @@ A comprehensive OpenAI-compatible API proxy hub that centralizes multiple AI API
    Edit `.env` with your actual values:
    ```env
    DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-   SESSION_SECRET=your-secure-session-secret-key
    NODE_ENV=development
    ```
-   
-   **About SESSION_SECRET**:
-   - **Development**: Optional - the application will work without it using default session handling
-   - **Production**: Required - generates secure session cookies for admin authentication
-   - **Format**: Use a random string of 32+ characters for security
-   - **Generation**: `openssl rand -base64 32` or any secure random generator
    
    **Security Note**: Never commit the `.env` file to version control. It contains sensitive credentials.
 
@@ -86,12 +79,9 @@ The application will be available at `http://localhost:5000`
 2. **Set production environment variables**
    ```env
    DATABASE_URL=your-production-database-url
-   SESSION_SECRET=your-production-session-secret
    NODE_ENV=production
    PORT=5000
    ```
-   
-   **Important**: `SESSION_SECRET` is required in production for secure admin sessions.
 
 3. **Run database migrations**
    ```bash
@@ -133,7 +123,6 @@ This will start both the PostgreSQL database and the application. The database w
      --name openai-proxy-hub \
      -p 5000:5000 \
      -e DATABASE_URL="postgresql://user:pass@host:5432/db" \
-     -e SESSION_SECRET="your-secure-secret" \
      -e NODE_ENV="production" \
      openai-proxy-hub
    ```
@@ -143,7 +132,6 @@ This will start both the PostgreSQL database and the application. The database w
 Create a `.env.docker` file:
 ```env
 POSTGRES_PASSWORD=secure_database_password
-SESSION_SECRET=your-production-session-secret
 DATABASE_URL=postgresql://proxy_user:secure_database_password@postgres:5432/openai_proxy_hub
 ```
 
@@ -257,8 +245,6 @@ curl -X POST https://your-domain.com/v1/chat/completions \
 ## Security Considerations
 
 - **Change default admin password** immediately after first login
-- **SESSION_SECRET is mandatory for production** - use 32+ random characters for secure sessions
-- **Generate SESSION_SECRET**: `openssl rand -base64 32` or similar secure method
 - **Never commit `.env` files** to version control - they contain sensitive credentials
 - **Enable HTTPS** for production deployments
 - **Regularly rotate API keys** and database passwords
@@ -287,8 +273,7 @@ The dashboard provides:
 2. **Admin Login Failed**
    - Confirm default credentials: admin/admin123
    - Check if admin account exists in database
-   - Verify `SESSION_SECRET` is set for production environments
-   - Session issues: Generate new SESSION_SECRET with `openssl rand -base64 32`
+   - Verify session configuration is working
 
 3. **API Requests Failing**
    - Check API provider configurations
