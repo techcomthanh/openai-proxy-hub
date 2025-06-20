@@ -35,7 +35,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <NetworkIcon className="text-white w-4 h-4" />
             </div>
-            <h1 className="ml-3 text-xl font-semibold text-gray-900">Proxy HUB</h1>
+            <h1 className="ml-3 text-xl font-semibold text-gray-900">OpenAI Proxy HUB</h1>
           </div>
           {onClose && (
             <button

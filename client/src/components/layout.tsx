@@ -42,7 +42,7 @@ export default function Layout({ children }: LayoutProps) {
                 <MenuIcon className="w-5 h-5" />
               </button>
               <h2 className="ml-2 text-2xl font-semibold text-gray-900" id="page-title">
-                Proxy HUB
+                OpenAI Proxy HUB
               </h2>
             </div>
             <div className="flex items-center space-x-4">

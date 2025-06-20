@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application built as an API proxy service that allows users to manage multiple AI APIs through a unified interface. The application provides a dashboard for managing API endpoints, model aliases, users, and monitoring request logs. It serves as a middleware layer between clients and various AI service providers, handling authentication, routing, and logging.
+This is a full-stack web application called "OpenAI Proxy HUB" built as an API proxy service that allows users to manage multiple AI APIs through a unified interface. The application provides a dashboard for managing API endpoints, model aliases, users, and monitoring request logs. It serves as a middleware layer between clients and various AI service providers, handling authentication, routing, and logging.
 
 ## System Architecture
 
@@ -107,6 +107,8 @@ The application uses five main tables:
 ```
 Changelog:
 - June 20, 2025. Initial setup
+- June 20, 2025. Successfully migrated from Neon serverless to user's PostgreSQL database
+- June 20, 2025. Renamed application to "OpenAI Proxy HUB"
 ```
 
 ## User Preferences
