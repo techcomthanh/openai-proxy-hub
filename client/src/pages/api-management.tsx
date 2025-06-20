@@ -81,35 +81,21 @@ export default function ApiManagement() {
     setTestResponse("");
     
     try {
-      const response = await fetch(testApi.baseUrl + "/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${testApi.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: testApi.modelName,
-          messages: [
-            { role: "user", content: testMessage }
-          ],
-          max_tokens: 150,
-          temperature: 0.7
-        }),
+      const response = await apiRequest("POST", `/api/test-api/${testApi.id}`, {
+        message: testMessage
       });
 
-      const data = await response.json();
-      
-      if (response.ok && data.choices && data.choices[0]) {
-        setTestResponse(data.choices[0].message.content);
+      if (response.success) {
+        setTestResponse(response.response);
         toast({
           title: "Test Successful",
           description: "API responded successfully",
         });
       } else {
-        setTestResponse(`Error: ${data.error?.message || "Unknown error occurred"}`);
+        setTestResponse(`Error: ${response.error || "Unknown error occurred"}`);
         toast({
           title: "Test Failed",
-          description: data.error?.message || "API test failed",
+          description: response.error || "API test failed",
           variant: "destructive",
         });
       }
@@ -167,14 +153,14 @@ export default function ApiManagement() {
           <ul className="divide-y divide-gray-200">
             {apis.map((api) => (
               <li key={api.id}>
-                <div className="px-6 py-4 flex items-center justify-between">
+                <div className="px-6 py-4">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                         <ServerIcon className="w-5 h-5 text-blue-600" />
                       </div>
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 flex-1">
                       <div className="flex items-center">
                         <p className="text-sm font-medium text-gray-900">{api.baseUrl}</p>
                         <Badge
@@ -192,30 +178,33 @@ export default function ApiManagement() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="mt-3 flex items-center space-x-2">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleTestApi(api)}
                       disabled={!api.isActive}
                       title="Test API"
                     >
-                      <TestTubeIcon className="w-4 h-4" />
+                      <TestTubeIcon className="w-4 h-4 mr-1" />
+                      Test
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleEdit(api)}
                     >
-                      <EditIcon className="w-4 h-4" />
+                      <EditIcon className="w-4 h-4 mr-1" />
+                      Edit
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleDelete(api.id)}
                       disabled={deleteMutation.isPending}
                     >
-                      <TrashIcon className="w-4 h-4" />
+                      <TrashIcon className="w-4 h-4 mr-1" />
+                      Delete
                     </Button>
                   </div>
                 </div>

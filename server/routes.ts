@@ -191,6 +191,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API test endpoint
+  app.post('/api/test-api/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { message } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+      }
+
+      const api = await storage.getApi(id);
+      if (!api || !api.isActive) {
+        return res.status(404).json({ error: 'API not found or inactive' });
+      }
+
+      // Make direct call to the upstream API for testing
+      const response = await fetch(api.baseUrl + "/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${api.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: api.modelName,
+          messages: [
+            { role: "user", content: message }
+          ],
+          max_tokens: 150,
+          temperature: 0.7
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.choices && data.choices[0]) {
+        res.json({ 
+          success: true, 
+          response: data.choices[0].message.content,
+          usage: data.usage
+        });
+      } else {
+        res.status(response.status).json({ 
+          success: false, 
+          error: data.error?.message || "API test failed" 
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : "Network error occurred" 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
