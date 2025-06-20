@@ -55,7 +55,10 @@ The application uses five main tables:
 ### Authentication & Authorization
 - API key-based authentication for proxy requests
 - Permission-based access control (users have allowed model lists)
-- Admin interface uses session-based authentication (implementation pending)
+- Admin interface uses session-based authentication with Express sessions
+- Default admin account: username "admin", password "admin123"
+- Protected admin routes require login before accessing dashboard features
+- Automatic session management with logout functionality
 
 ## Data Flow
 
@@ -111,6 +114,10 @@ Changelog:
 - June 20, 2025. Renamed application to "OpenAI Proxy HUB"
 - June 20, 2025. Fixed proxy routing and verified working /v1/chat/completions endpoint
 - June 20, 2025. Updated model configuration to use Qwen/Qwen2.5-Coder-14B-Instruct-AWQ from Roxane API
+- June 20, 2025. Implemented complete admin authentication system with session-based security
+- June 20, 2025. Added protected admin routes and login interface with default credentials (admin/admin123)
+- June 20, 2025. Enhanced UI with responsive design and fixed menu text contrast issues
+- June 20, 2025. Created user info display and logout functionality in sidebar
 ```
 
 ## User Preferences

@@ -16,7 +16,7 @@ import { useAuth } from "@/lib/auth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: GaugeIcon },
-  { name: "API Management", href: "/apis", icon: ServerIcon },
+  { name: "API Providers", href: "/apis", icon: ServerIcon },
   { name: "Model Aliases", href: "/models", icon: BrainIcon },
   { name: "User Management", href: "/users", icon: UsersIcon },
   { name: "Configuration", href: "/config", icon: SettingsIcon },
@@ -70,13 +70,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 onClick={onClose}
                 className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                   isActive
-                    ? "bg-primary bg-opacity-10 border-r-2 border-primary text-primary"
-                    : "text-gray-700 hover:bg-gray-50"
+                    ? "bg-primary/10 border-r-2 border-primary text-primary font-semibold"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
               >
                 <Icon
                   className={`mr-3 w-4 h-4 ${
-                    isActive ? "text-primary" : "text-gray-400"
+                    isActive ? "text-primary" : "text-gray-400 dark:text-gray-500"
                   }`}
                 />
                 {item.name}
