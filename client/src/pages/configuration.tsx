@@ -41,8 +41,11 @@ export default function Configuration() {
 
   const { data: configurations, isLoading } = useQuery<Configuration[]>({
     queryKey: ["/api/configuration"],
-    onSuccess: (data) => {
-      const configMap = data.reduce((acc, item) => {
+  });
+
+  useEffect(() => {
+    if (configurations) {
+      const configMap = configurations.reduce((acc: Record<string, any>, item: Configuration) => {
         acc[item.key] = item.value;
         return acc;
       }, {} as Record<string, any>);
@@ -51,8 +54,8 @@ export default function Configuration() {
         ...prev,
         ...configMap,
       }));
-    },
-  });
+    }
+  }, [configurations]);
 
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<ConfigState>) => {
