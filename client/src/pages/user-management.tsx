@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,15 @@ import type { ApiUser } from "@shared/schema";
 export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentHost, setCurrentHost] = useState("your-domain.com");
   const { toast } = useToast();
+  
+  // Set current host when component mounts
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCurrentHost(window.location.host);
+    }
+  }, []);
 
   const { data: users, isLoading } = useQuery<ApiUser[]>({
     queryKey: ["/api/users"],
@@ -55,11 +63,65 @@ export default function UserManagement() {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied",
-      description: "API key copied to clipboard",
-    });
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            toast({
+              title: "Copied",
+              description: "API key copied to clipboard",
+            });
+          })
+          .catch(err => {
+            console.error('Failed to copy: ', err);
+            fallbackCopy(text);
+          });
+      } else {
+        fallbackCopy(text);
+      }
+    } catch (error) {
+      console.error('Copy error:', error);
+      toast({
+        title: "Copy failed",
+        description: "Please copy the API key manually",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Fallback copy method for environments where clipboard API is not available
+  const fallbackCopy = (text: string) => {
+    // Create a temporary textarea element
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    
+    // Make it invisible but part of the document
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    
+    // Select and copy
+    textArea.select();
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        toast({
+          title: "Copied",
+          description: "API key copied to clipboard",
+        });
+      } else {
+        throw new Error('Copy command was unsuccessful');
+      }
+    } catch (err) {
+      toast({
+        title: "Copy failed",
+        description: "Please copy the API key manually",
+        variant: "destructive"
+      });
+    }
+    
+    // Clean up
+    document.body.removeChild(textArea);
   };
 
   if (isLoading) {

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ServerIcon, BrainIcon, UsersIcon, TrendingUpIcon, CheckIcon, XIcon } from "lucide-react";
 
@@ -19,6 +20,15 @@ interface RequestLog {
 }
 
 export default function Dashboard() {
+  const [currentHost, setCurrentHost] = useState("your-domain.com");
+
+  // Set current host when component mounts
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCurrentHost(window.location.host);
+    }
+  }, []);
+
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
     queryKey: ["/api/stats"],
   });
@@ -106,6 +116,34 @@ export default function Dashboard() {
                 <p className="text-2xl font-semibold text-gray-900">
                   {stats?.requestsToday || 0}
                 </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Example API Usage */}
+      <div className="mb-8">
+        <Card>
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">Example API Usage</h3>
+          </div>
+          <CardContent className="p-6">
+            <div className="bg-gray-50 p-4 rounded border">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Curl Request Example:</h4>
+              <pre className="bg-gray-900 text-gray-100 p-3 rounded-md font-mono text-sm overflow-x-auto whitespace-pre-wrap">
+{`curl https://${currentHost}/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "MODEL_ALIAS",
+    "messages": [
+      {"role": "user", "content": "Hello!"}
+    ]
+  }'`}
+              </pre>
+              <div className="text-xs text-gray-500 mt-2">
+                Replace <code>YOUR_API_KEY</code> with a user's API key and <code>MODEL_ALIAS</code> with an allowed model alias.
               </div>
             </div>
           </CardContent>
