@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DownloadIcon, FileTextIcon } from "lucide-react";
+import { DownloadIcon, FileTextIcon, ClockIcon, KeyIcon, BrainIcon, TimerIcon, HashIcon } from "lucide-react";
 import type { RequestLog } from "@shared/schema";
 
 export default function RequestLogs() {
@@ -89,66 +90,77 @@ export default function RequestLogs() {
         </div>
       </div>
 
-      {/* Logs Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      {/* Logs Cards */}
+      <div className="space-y-4">
         {logs && logs.length > 0 ? (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Timestamp
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  API Key
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Model
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Response Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tokens
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {logs.map((log) => (
-                <tr key={log.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(log.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <code className="text-sm text-gray-500 font-mono">{log.userApiKey}</code>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {log.modelAlias}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(log.statusCode)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {log.responseTimeMs}ms
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {log.requestTokens && log.responseTokens 
-                      ? `${log.requestTokens} / ${log.responseTokens}`
-                      : "-"
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          logs.map((log) => (
+            <Card key={log.id} className="w-full overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex flex-col space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center">
+                      <div>
+                        <h4 className="text-md font-medium text-gray-900">{log.modelAlias}</h4>
+                        <div className="flex items-center mt-1">
+                          <ClockIcon className="h-4 w-4 text-gray-400 mr-1" />
+                          <span className="text-sm text-gray-500">{formatDate(log.createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      {getStatusBadge(log.statusCode)}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <div className="flex items-center space-x-2">
+                      <KeyIcon className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-xs font-medium text-gray-500">API Key</p>
+                        <code className="text-sm text-gray-700 font-mono">{log.userApiKey}</code>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <TimerIcon className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-xs font-medium text-gray-500">Response Time</p>
+                        <p className="text-sm text-gray-700">{log.responseTimeMs}ms</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <HashIcon className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="text-xs font-medium text-gray-500">Tokens (Request / Response)</p>
+                        <p className="text-sm text-gray-700">
+                          {log.requestTokens && log.responseTokens 
+                            ? `${log.requestTokens} / ${log.responseTokens}`
+                            : "-"
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {log.errorMessage && (
+                    <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                      <p className="font-medium">Error:</p>
+                      <p>{log.errorMessage}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))
         ) : (
-          <div className="text-center py-12">
-            <FileTextIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No request logs</h3>
-            <p className="mt-1 text-sm text-gray-500">Logs will appear here as requests are made to the proxy.</p>
-          </div>
+          <Card>
+            <CardContent className="py-12 flex flex-col items-center justify-center">
+              <FileTextIcon className="h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No request logs</h3>
+              <p className="mt-1 text-sm text-gray-500">Logs will appear here as requests are made to the proxy.</p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
