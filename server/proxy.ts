@@ -3,7 +3,6 @@ import { storage } from "./storage";
 
 export async function proxyMiddleware(req: Request, res: Response, next: NextFunction) {
   const startTime = Date.now();
-  
   try {
     // Extract API key from Authorization header
     const authHeader = req.headers.authorization;
@@ -20,6 +19,8 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
         userApiKey: apiKey,
         modelAlias: req.body?.model || 'unknown',
         upstreamApiId: null,
+        requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+        requestBody: req.body,
         statusCode: 401,
         responseTimeMs: Date.now() - startTime,
         requestTokens: null,
@@ -41,6 +42,8 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
         userApiKey: apiKey,
         modelAlias: requestedModel,
         upstreamApiId: null,
+        requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+        requestBody: req.body,
         statusCode: 403,
         responseTimeMs: Date.now() - startTime,
         requestTokens: null,
@@ -57,6 +60,8 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
         userApiKey: apiKey,
         modelAlias: requestedModel,
         upstreamApiId: null,
+        requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+        requestBody: req.body,
         statusCode: 404,
         responseTimeMs: Date.now() - startTime,
         requestTokens: null,
@@ -73,6 +78,8 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
         userApiKey: apiKey,
         modelAlias: requestedModel,
         upstreamApiId: modelAlias.apiId,
+        requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+        requestBody: req.body,
         statusCode: 503,
         responseTimeMs: Date.now() - startTime,
         requestTokens: null,
@@ -99,7 +106,6 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
         },
         body: JSON.stringify(upstreamBody),
       });
-      
       const responseData = await upstreamResponse.json();
       const responseTime = Date.now() - startTime;
       
@@ -108,6 +114,8 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
         userApiKey: apiKey,
         modelAlias: requestedModel,
         upstreamApiId: upstreamApi.id,
+        requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+        requestBody: req.body,
         statusCode: upstreamResponse.status,
         responseTimeMs: responseTime,
         requestTokens: responseData.usage?.prompt_tokens || null,
@@ -127,6 +135,8 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
         userApiKey: apiKey,
         modelAlias: requestedModel,
         upstreamApiId: upstreamApi.id,
+        requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+        requestBody: req.body,
         statusCode: 500,
         responseTimeMs: responseTime,
         requestTokens: null,

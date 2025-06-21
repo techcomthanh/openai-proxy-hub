@@ -34,6 +34,8 @@ export const requestLogs = pgTable("request_logs", {
   userApiKey: text("user_api_key").notNull(),
   modelAlias: text("model_alias").notNull(),
   upstreamApiId: integer("upstream_api_id").references(() => apis.id),
+  requestUrl: text("request_url"),
+  requestBody: jsonb("request_body"),
   statusCode: integer("status_code").notNull(),
   responseTimeMs: integer("response_time_ms").notNull(),
   requestTokens: integer("request_tokens"),
