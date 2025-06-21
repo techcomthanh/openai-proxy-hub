@@ -106,60 +106,44 @@ export default function ModelAliases() {
         </Dialog>
       </div>
 
-      {/* Model Aliases Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      {/* Model Aliases Grid */}
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
         {aliases && aliases.length > 0 ? (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Alias
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Target Model
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  API Endpoint
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {aliases.map((alias) => {
-                const api = getApiForAlias(alias.apiId);
-                return (
-                  <tr key={alias.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 w-8 h-8">
-                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <BrainIcon className="w-4 h-4 text-purple-600" />
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{alias.alias}</div>
+          <div className="flex flex-col space-y-4 max-w-3xl mx-auto">
+            {aliases.map((alias) => {
+              const api = getApiForAlias(alias.apiId);
+              return (
+                <div key={alias.id} className="bg-white border rounded-lg shadow-sm overflow-hidden">
+                  <div className="p-5">
+                    <div className="flex items-center mb-3">
+                      <div className="flex-shrink-0 w-10 h-10">
+                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <BrainIcon className="w-6 h-6 text-purple-600" />
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <code className="text-sm text-gray-900 bg-gray-100 px-2 py-1 rounded">
-                        {api?.modelName || "Unknown"}
-                      </code>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {api?.baseUrl || "Unknown"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant={alias.isActive ? "default" : "secondary"}>
-                        {alias.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="ml-4 flex-1">
+                        <h4 className="text-lg font-medium text-gray-900">{alias.alias}</h4>
+                        <Badge variant={alias.isActive ? "default" : "secondary"} className="mt-1">
+                          {alias.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 space-y-2">
+                      <div>
+                        <div className="text-xs font-medium uppercase text-gray-500">Target Model</div>
+                        <code className="text-sm text-gray-900 bg-gray-100 px-2 py-1 rounded">
+                          {api?.modelName || "Unknown"}
+                        </code>
+                      </div>
+                      
+                      <div>
+                        <div className="text-xs font-medium uppercase text-gray-500">API Endpoint</div>
+                        <div className="text-sm text-gray-700 truncate">{api?.baseUrl || "Unknown"}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end mt-5 pt-3 border-t border-gray-100">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -177,12 +161,12 @@ export default function ModelAliases() {
                       >
                         Delete
                       </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <div className="text-center py-12">
             <BrainIcon className="mx-auto h-12 w-12 text-gray-400" />
