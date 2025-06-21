@@ -1,15 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DownloadIcon, FileTextIcon, ClockIcon, KeyIcon, BrainIcon, TimerIcon, HashIcon } from "lucide-react";
+import { DownloadIcon, FileTextIcon, ClockIcon, KeyIcon, BrainIcon, TimerIcon, HashIcon, LinkIcon, CodeIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import type { RequestLog } from "@shared/schema";
 
 export default function RequestLogs() {
+  const [expandedLogs, setExpandedLogs] = useState<Record<number, boolean>>({});
   const { data: logs, isLoading } = useQuery<RequestLog[]>({
     queryKey: ["/api/request-logs"],
   });
+  
+  const toggleExpand = (id: number) => {
+    setExpandedLogs(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   const getStatusBadge = (statusCode: number) => {
     if (statusCode >= 200 && statusCode < 300) {
@@ -20,8 +29,15 @@ export default function RequestLogs() {
     return <Badge variant="secondary">{statusCode}</Badge>;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  const formatDate = (dateInput: string | Date) => {
+    try {
+      if (dateInput instanceof Date) {
+        return dateInput.toLocaleString();
+      }
+      return new Date(dateInput).toLocaleString();
+    } catch (e) {
+      return String(dateInput);
+    }
   };
 
   const exportLogs = () => {
@@ -30,7 +46,7 @@ export default function RequestLogs() {
     const csv = [
       ["Timestamp", "API Key", "Model", "Status", "Response Time", "Request Tokens", "Response Tokens", "Error"].join(","),
       ...logs.map(log => [
-        formatDate(log.createdAt),
+        formatDate(String(log.createdAt)),
         log.userApiKey,
         log.modelAlias,
         log.statusCode.toString(),
@@ -45,7 +61,8 @@ export default function RequestLogs() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `request-logs-${new Date().toISOString().split('T')[0]}.csv`;
+    const today = new Date().toISOString().split('T')[0];
+    a.download = `request-logs-${today}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -103,12 +120,22 @@ export default function RequestLogs() {
                         <h4 className="text-md font-medium text-gray-900">{log.modelAlias}</h4>
                         <div className="flex items-center mt-1">
                           <ClockIcon className="h-4 w-4 text-gray-400 mr-1" />
-                          <span className="text-sm text-gray-500">{formatDate(log.createdAt)}</span>
+                          <span className="text-sm text-gray-500">{formatDate(String(log.createdAt))}</span>
                         </div>
                       </div>
                     </div>
-                    <div>
+                    <div className="flex space-x-2 items-center">
                       {getStatusBadge(log.statusCode)}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0" 
+                        onClick={() => toggleExpand(log.id)}
+                      >
+                        {expandedLogs[log.id] ? 
+                          <ChevronUpIcon className="h-4 w-4" /> : 
+                          <ChevronDownIcon className="h-4 w-4" />}
+                      </Button>
                     </div>
                   </div>
 
@@ -142,6 +169,38 @@ export default function RequestLogs() {
                       </div>
                     </div>
                   </div>
+
+                  {expandedLogs[log.id] && (
+                    <div className="pt-4 border-t border-gray-100 mt-2">
+                      <h5 className="text-sm font-medium text-gray-900 mb-3">Request Details</h5>
+                      
+                      <div className="space-y-4">
+                        {/* Request URL */}
+                        <div className="bg-gray-50 p-3 rounded-md">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <LinkIcon className="h-4 w-4 text-gray-500" />
+                            <p className="text-xs font-medium text-gray-500">Request URL</p>
+                          </div>
+                          <code className="text-sm text-gray-700 font-mono block break-all">
+                            {log.requestUrl || `${log.upstreamApiId ? '[Upstream API]' : ''}/v1/chat/completions`}
+                          </code>
+                        </div>
+                        
+                        {/* Request Body */}
+                        <div className="bg-gray-50 p-3 rounded-md">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <CodeIcon className="h-4 w-4 text-gray-500" />
+                            <p className="text-xs font-medium text-gray-500">Request Body</p>
+                          </div>
+                          <pre className="text-sm text-gray-700 font-mono overflow-x-auto whitespace-pre-wrap">
+                            {log.requestBody ? 
+                              JSON.stringify(log.requestBody && typeof log.requestBody === 'string' ? JSON.parse(log.requestBody) : log.requestBody, null, 2) : 
+                              JSON.stringify({ model: log.modelAlias, messages: [{ role: "user", content: "[Request content not captured]" }] }, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {log.errorMessage && (
                     <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-md text-sm">
