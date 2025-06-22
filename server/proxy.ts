@@ -96,6 +96,9 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
       model: upstreamApi.modelName, // Replace alias with actual model name
     };
     
+    // Check if this is a streaming request
+    const isStreaming = upstreamBody.stream === true;
+    
     try {
       // Make request to upstream API
       const upstreamResponse = await fetch(upstreamUrl, {
@@ -106,29 +109,136 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
         },
         body: JSON.stringify(upstreamBody),
       });
-      const responseData = await upstreamResponse.json();
-      const responseTime = Date.now() - startTime;
       
-      // Log the request
-      await storage.createRequestLog({
-        userApiKey: apiKey,
-        modelAlias: requestedModel,
-        upstreamApiId: upstreamApi.id,
-        requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
-        requestBody: req.body,
-        statusCode: upstreamResponse.status,
-        responseTimeMs: responseTime,
-        requestTokens: responseData.usage?.prompt_tokens || null,
-        responseTokens: responseData.usage?.completion_tokens || null,
-        errorMessage: upstreamResponse.ok ? null : responseData.error?.message || 'Unknown error',
-      });
-      
-      // Return response with original model alias
-      if (responseData.model) {
-        responseData.model = requestedModel;
+      if (isStreaming) {
+        // Handle streaming response
+        res.status(upstreamResponse.status);
+        
+        // Set appropriate headers for streaming
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        
+        if (!upstreamResponse.body) {
+          throw new Error('No response body for streaming');
+        }
+        
+        const reader = upstreamResponse.body.getReader();
+        const decoder = new TextDecoder();
+        
+        let buffer = '';
+        let requestTokens = 0;
+        let responseTokens = 0;
+        
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
+            
+            // Process complete lines
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // Keep incomplete line in buffer
+            
+            for (const line of lines) {
+              if (line.trim().startsWith('data: ')) {
+                const dataStr = line.trim().substring(6);
+                
+                if (dataStr === '[DONE]') {
+                  res.write(`data: [DONE]\n\n`);
+                  continue;
+                }
+                
+                try {
+                  const data = JSON.parse(dataStr);
+                  
+                  // Replace model name with alias
+                  if (data.model) {
+                    data.model = requestedModel;
+                  }
+                  
+                  // Track token usage if available
+                  if (data.usage) {
+                    requestTokens = data.usage.prompt_tokens || requestTokens;
+                    responseTokens = data.usage.completion_tokens || responseTokens;
+                  }
+                  
+                  res.write(`data: ${JSON.stringify(data)}\n\n`);
+                } catch (e) {
+                  // If JSON parsing fails, pass through as-is
+                  res.write(`data: ${dataStr}\n\n`);
+                }
+              } else if (line.trim()) {
+                res.write(`${line}\n`);
+              }
+            }
+          }
+          
+          res.end();
+          
+          // Log the streaming request
+          const responseTime = Date.now() - startTime;
+          await storage.createRequestLog({
+            userApiKey: apiKey,
+            modelAlias: requestedModel,
+            upstreamApiId: upstreamApi.id,
+            requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+            requestBody: req.body,
+            statusCode: upstreamResponse.status,
+            responseTimeMs: responseTime,
+            requestTokens: requestTokens || null,
+            responseTokens: responseTokens || null,
+            errorMessage: upstreamResponse.ok ? null : 'Streaming error',
+          });
+          
+        } catch (streamError) {
+          console.error('Streaming error:', streamError);
+          res.end();
+          
+          const responseTime = Date.now() - startTime;
+          await storage.createRequestLog({
+            userApiKey: apiKey,
+            modelAlias: requestedModel,
+            upstreamApiId: upstreamApi.id,
+            requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+            requestBody: req.body,
+            statusCode: 500,
+            responseTimeMs: responseTime,
+            requestTokens: null,
+            responseTokens: null,
+            errorMessage: streamError instanceof Error ? streamError.message : 'Streaming error',
+          });
+        }
+        
+      } else {
+        // Handle non-streaming response (original logic)
+        const responseData = await upstreamResponse.json();
+        const responseTime = Date.now() - startTime;
+        
+        // Log the request
+        await storage.createRequestLog({
+          userApiKey: apiKey,
+          modelAlias: requestedModel,
+          upstreamApiId: upstreamApi.id,
+          requestUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+          requestBody: req.body,
+          statusCode: upstreamResponse.status,
+          responseTimeMs: responseTime,
+          requestTokens: responseData.usage?.prompt_tokens || null,
+          responseTokens: responseData.usage?.completion_tokens || null,
+          errorMessage: upstreamResponse.ok ? null : responseData.error?.message || 'Unknown error',
+        });
+        
+        // Return response with original model alias
+        if (responseData.model) {
+          responseData.model = requestedModel;
+        }
+        
+        res.status(upstreamResponse.status).json(responseData);
       }
-      
-      res.status(upstreamResponse.status).json(responseData);
     } catch (error) {
       const responseTime = Date.now() - startTime;
       await storage.createRequestLog({
