@@ -32,6 +32,20 @@ export async function proxyMiddleware(req: Request, res: Response, next: NextFun
     
     // Extract model from request body
     const requestedModel = req.body?.model;
+    
+    // Special handling for GET /v1/models
+    if (req.method === 'GET' && req.path === '/v1/models') {
+      return res.json({
+        object: 'list',
+        data: user.allowedModels.map(model => ({
+          id: model,
+          object: 'model',
+          created: user.createdAt.getTime() / 1000,
+          owned_by: 'library'
+        }))
+      });
+    }
+    
     if (!requestedModel) {
       return res.status(400).json({ error: 'Model parameter is required' });
     }

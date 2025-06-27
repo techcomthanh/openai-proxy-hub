@@ -519,9 +519,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateApiUser(id: number, updateData: Partial<InsertApiUser>): Promise<ApiUser | undefined> {
+    const allowedModels = updateData.allowedModels ?? [];
+    const modelAliases = await this.getModelAliases();
     const [user] = await db
       .update(apiUsers)
-      .set(updateData)
+      .set({
+        ...updateData,
+        allowedModels: allowedModels.filter((modelAlias) =>
+          modelAliases.some(
+            (alias) => alias.alias === modelAlias
+          )
+        ),
+      })
       .where(eq(apiUsers.id, id))
       .returning();
     return user || undefined;
